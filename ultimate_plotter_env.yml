@@ -1,0 +1,14 @@
+name: ultimate-plotter
+channels:
+  - conda-forge
+dependencies:
+  - python=3.7
+  - jupyterlab>=2.0.0
+  - numpy>=1.18.1
+  - notebook
+  - root
+  - uproot
+  - awkward
+  - aghast
+  - boost-histogram
+  - mplhep
