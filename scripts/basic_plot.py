@@ -2,9 +2,13 @@
 import json
 import argparse
 
+from ultimate_plotter import BasicPlot
+from ultimate_plotter import setup_logging
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser(
-            description="Plot Data vs Simulation shapes and ratio plot"
+            description="Plot variables distributions from an input file"
             )
 
     parser.add_argument(
@@ -15,31 +19,17 @@ def parse_arguments():
             )
 
     parser.add_argument(
-            "--data_file",
+            "--input_file",
             required=True,
             type=str,
-            help="ROOT file containing data TTree"
+            help="Input ROOT file"
             )
 
     parser.add_argument(
-            "--data_tree",
+            "--tree_name",
             required=True,
             type=str,
-            help="Name of TTree in data_file"
-            )
-
-    parser.add_argument(
-            "--sim_file",
-            required=True,
-            type=str,
-            help="ROOT file containing simulation TTree"
-            )
-
-    parser.add_argument(
-            "--sim_tree",
-            required=True,
-            type=str,
-            help="Name of TTree in sim_file"
+            help="Name of TTree in input_file"
             )
 
     parser.add_argument(
@@ -54,12 +44,18 @@ def parse_arguments():
 
 def main(args):
     config = args.config
+    input_file = args.input_file
+    tree_name = args.tree_name
     output_dir = args.output_dir
 
-    with open(config) as input_file:
-        config = json.load(input_file)
+    with open(config) as f:
+        config = json.load(f)
+
+    plotter = BasicPlot(config, input_file, tree_name)
+    plotter.draw(output_dir)
 
 
 if __name__ == "__main__":
+    logger = setup_logging()
     args = parse_arguments()
     main(args)
