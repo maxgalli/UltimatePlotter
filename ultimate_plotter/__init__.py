@@ -1,4 +1,5 @@
 from .plots import BasicPlot
+from .parser import universal_parser
 
 import logging
 

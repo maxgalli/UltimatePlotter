@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-import json
 import argparse
 
 from ultimate_plotter import BasicPlot
 from ultimate_plotter import setup_logging
+from ultimate_plotter import universal_parser
 
 
 def parse_arguments():
@@ -39,6 +39,14 @@ def parse_arguments():
             help="Output directory"
             )
 
+    parser.add_argument(
+            "--pkl_output",
+            required=False,
+            type=str,
+            default="output",
+            help="Pickle file in which information used to make the plots are dumped"
+            )
+
     return parser.parse_args()
 
 
@@ -47,12 +55,13 @@ def main(args):
     input_file = args.input_file
     tree_name = args.tree_name
     output_dir = args.output_dir
+    pkl_output = args.pkl_output
 
-    with open(config) as f:
-        config = json.load(f)
+    config = universal_parser(config)
 
-    plotter = BasicPlot(config, input_file, tree_name)
+    plotter = BasicPlot(input_file, tree_name, **config)
     plotter.draw(output_dir)
+    plotter.dump_info(output_dir, pkl_output)
 
 
 if __name__ == "__main__":
