@@ -18,5 +18,5 @@ setuptools.setup(
     description="HEP data processor and plotter with interfaces to multiple scikit-hep packages",
     packages=["ultimate_plotter"],
     install_requires=get_dependencies("ultimate_plotter_env.yml"),
-    scripts = ["scripts/plot_ratio.py", "scripts/basic_plot.py"]
+    scripts = ["scripts/basic_plot.py", "scripts/data_simulation_plot.py"]
 )

@@ -1,4 +1,5 @@
 from .plots import BasicPlot
+from .plots import DataSimulationPlot
 from .parser import universal_parser
 
 import logging

@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
-import json
 import argparse
+
+from ultimate_plotter import DataSimulationPlot
+from ultimate_plotter import setup_logging
+from ultimate_plotter import universal_parser
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
@@ -49,17 +53,34 @@ def parse_arguments():
             help="Output directory"
             )
 
+    parser.add_argument(
+            "--pkl_output",
+            required=False,
+            type=str,
+            default="output",
+            help="Pickle file in which information used to make the plots are dumped"
+            )
+
     return parser.parse_args()
 
 
 def main(args):
     config = args.config
+    data_file = args.data_file
+    data_tree = args.data_tree
+    sim_file = args.sim_file
+    sim_tree = args.sim_tree
     output_dir = args.output_dir
+    pkl_output = args.pkl_output
 
-    with open(config) as input_file:
-        config = json.load(input_file)
+    config = universal_parser(config)
+
+    plotter = DataSimulationPlot(data_file, data_tree, sim_file, sim_tree, **config)
+    plotter.draw(output_dir)
+    plotter.dump_info(output_dir, pkl_output)
 
 
 if __name__ == "__main__":
+    logger = setup_logging()
     args = parse_arguments()
     main(args)

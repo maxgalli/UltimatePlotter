@@ -109,6 +109,80 @@ class BasicPlot:
 
 
 
-class RatioPlot(BasicPlot):
-    def __init__(self, ):
-        pass
+class DataSimulationPlot(BasicPlot):
+    def __init__(self, data_file, data_tree, sim_file, sim_tree, variables_specs=None, cuts=None):
+        self.data_file = data_file
+        self.data_tree = data_tree
+        self.sim_file = sim_file
+        self.sim_tree = sim_tree
+
+        if not variables_specs:
+            self.variables_specs = []
+        else:
+            self.variables_specs = variables_specs
+        if not cuts:
+            self.cuts = []
+        else:
+            self.cuts = cuts
+
+        self.df_data = self.extract(self.data_file, self.data_tree)
+        self.df_data = self.apply_cuts(self.df_data, self.cuts)
+        self.df_sim = self.extract(self.sim_file, self.sim_tree)
+        self.df_sim = self.apply_cuts(self.df_sim, self.cuts)
+
+
+    def draw_single_variable(self, output_dir, name, bins=None, range=None, plot_name=None, color=None):
+        # 'name' is the name of the variable found in the TTree
+        # 'plot_name' is the name we want to plot on the axis and in the title
+        if not plot_name:
+            plot_name = name
+
+        if bins and range:
+            output_name = "_".join([name, "{}bins".format(str(bins)), *map(str, range)])
+        else:
+            output_name = name
+
+        if not color:
+            color = "deepskyblue"
+
+        logger.info("Drawing plot for variable {}".format(name))
+
+        fig, ax = plt.subplots()
+
+        # Plot data
+        # Data is always plot as black dots
+        dcentres, dcounts = self._histo_to_dots(self.df_data, name, bins, range)
+        plt.plot(dcentres, dcounts, "k.")
+
+        # Plot sim
+        plt.hist(self.df_sim[name], bins=bins, range=range, density=True, label=plot_name, histtype="step", edgecolor=color, linewidth=2.)
+
+        hep.cms.label(loc=0, data=True, llabel="Work in Progress", rlabel="")
+        ax.set_xlabel(plot_name, loc="center")
+        ax.legend(fontsize=16)
+
+        fig.savefig("{}/{}.pdf".format(output_dir, output_name), bbox_inches='tight')
+        fig.savefig("{}/{}.png".format(output_dir, output_name), bbox_inches='tight')
+
+
+    def dump_info(self, output_dir, pkl_output):
+        output_name = '/'.join([output_dir, "{}.pkl".format(pkl_output)])
+        logger.info("Dumping config information to {}".format(output_name))
+
+        to_dump = {}
+        to_dump["plot_type"] = self.__class__.__name__
+        to_dump["variables_specs"] = self.variables_specs
+        to_dump["cuts"] = self.cuts
+        to_dump["data_source_file"] = self.data_file
+        to_dump["data_source_tree"] = self.data_tree
+        to_dump["simulation_source_file"] = self.sim_file
+        to_dump["simulation_source_tree"] = self.sim_tree
+
+        with open(output_name, "wb") as f:
+            pickle.dump(to_dump, f)
+
+
+    def _histo_to_dots(self, dataframe, var, bins, range):
+        dcounts, dedges, patch = plt.hist(dataframe[var], bins=bins, range=range, density=True, alpha=0.0, histtype="step", edgecolor="black")
+        dcentres = (dedges[:-1] + dedges[1:]) / 2.
+        return dcentres, dcounts
