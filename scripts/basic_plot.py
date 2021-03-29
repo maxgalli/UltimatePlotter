@@ -47,25 +47,25 @@ def main(args):
     config = universal_parser(config)
 
     variables_specs = config["variables_specs"]
+    samples_specs = config["samples_specs"]
     if "selections" in config:
         selections = config["selections"]
 
     # Read ROOT input files as awkward arrays
     variables = [vs["name"] for vs in variables_specs]
-    samples = {}
-    for sample in config["samples"]:
-        samples[sample["process"]] = extract(sample["file"], sample["tree"], variables)
+    for sample in samples_specs:
+        sample["events"] = extract(sample["file"], sample["tree"], variables)
 
     for vs in variables_specs:
-        for process, events in samples.items():
+        for ss in samples_specs:
             variable_label = Label(vs["name"], vs["expression"])
-            sample_label = Label(process)
+            sample_label = Label(ss["process"])
 
             binning = vs["bins"]
             rng = vs["range"]
 
             histo = Histo1D(variable=variable_label, sample=sample_label, binning=binning, range=rng)
-            histo.fill(events[variable_label.name].to_numpy())
+            histo.fill(ss["events"][variable_label.name].to_numpy())
 
             # Setup and dump figure
             output_name = "_".join([variable_label.name, sample_label.name, "{}bins".format(str(binning)), *map(str, rng)])
@@ -73,7 +73,7 @@ def main(args):
             fig, ax = plt.subplots()
             hep.cms.label(loc=0, data=True, llabel="Work in Progress", rlabel="")
 
-            plot_1d(histo, ax, histtype="datalike")
+            plot_1d(histo, ax, histtype=ss["histtype"], color=ss["color"])
 
             fig.savefig("{}/{}.pdf".format(output_dir, output_name), bbox_inches='tight')
             fig.savefig("{}/{}.png".format(output_dir, output_name), bbox_inches='tight')

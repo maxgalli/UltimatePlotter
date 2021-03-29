@@ -13,12 +13,13 @@
             "range": [0, 100]
         }
     ],
-    "samples": [
+    "samples_specs": [
         {
             "process": "data",
             "type": "data",
             "file": "/work/gallim/root_files/tnp_merged_outputs/2018/HOPEFULLY/outputData.root",
             "tree": "tagAndProbeDumper/trees/Data_13TeV_All",
+            "histtype": "stepfilled",
             "color": "deepskyblue"
         }
     ]

@@ -23,14 +23,14 @@ def plot_1d(histo, axes, histtype="step", color=None):
             edge_color = "black"
 
         _edges = [histo.edges[0], *histo.edges]
-        _h = [0, *self.sum_events, 0]
+        _h = [0, *histo.sum_events, 0]
         axes.step(_edges, _h, color=edge_color, linestyle='-', linewidth=1, where='post', label=step_label)
 
         # Plot histogram as set of bars (if histtype == stepfilled)
         if histtype == "stepfilled":
             axes.bar(
                     histo.edges[:-1],
-                    self.sum_events,
+                    histo.sum_events,
                     width=histo.widths_from_edges(histo.edges),
                     align="edge",
                     label=histo.sample.expression,
