@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
 import argparse
+import matplotlib.pyplot as plt
+import mplhep as hep
 
-from ultimate_plotter import BasicPlot
-from ultimate_plotter import setup_logging
+from ultimate_plotter import Histo1D
+from ultimate_plotter import Label
 from ultimate_plotter import universal_parser
+
+from ultimate_plotter.utils import setup_logging
+from ultimate_plotter.utils import extract
+from ultimate_plotter.plotting_tools import plot_1d
+
+hep.set_style("CMS")
 
 
 def parse_arguments():
@@ -19,52 +27,59 @@ def parse_arguments():
             )
 
     parser.add_argument(
-            "--input_file",
-            required=True,
-            type=str,
-            help="Input ROOT file"
-            )
-
-    parser.add_argument(
-            "--tree_name",
-            required=True,
-            type=str,
-            help="Name of TTree in input_file"
-            )
-
-    parser.add_argument(
             "--output_dir",
             required=True,
             type=str,
             help="Output directory"
             )
 
-    parser.add_argument(
-            "--pkl_output",
-            required=False,
-            type=str,
-            default="output",
-            help="Pickle file in which information used to make the plots are dumped"
-            )
-
     return parser.parse_args()
 
 
+
 def main(args):
+    # Read input data and options
     config = args.config
-    input_file = args.input_file
-    tree_name = args.tree_name
     output_dir = args.output_dir
-    pkl_output = args.pkl_output
+
+    logger = setup_logging()
 
     config = universal_parser(config)
 
-    plotter = BasicPlot(input_file, tree_name, **config)
-    plotter.draw(output_dir)
-    plotter.dump_info(output_dir, pkl_output)
+    variables_specs = config["variables_specs"]
+    if "selections" in config:
+        selections = config["selections"]
+
+    # Read ROOT input files as awkward arrays
+    variables = [vs["name"] for vs in variables_specs]
+    samples = {}
+    for sample in config["samples"]:
+        samples[sample["process"]] = extract(sample["file"], sample["tree"], variables)
+
+    for vs in variables_specs:
+        for process, events in samples.items():
+            variable_label = Label(vs["name"], vs["expression"])
+            sample_label = Label(process)
+
+            binning = vs["bins"]
+            rng = vs["range"]
+
+            histo = Histo1D(variable=variable_label, sample=sample_label, binning=binning, range=rng)
+            histo.fill(events[variable_label.name].to_numpy())
+
+            # Setup and dump figure
+            output_name = "_".join([variable_label.name, sample_label.name, "{}bins".format(str(binning)), *map(str, rng)])
+
+            fig, ax = plt.subplots()
+            hep.cms.label(loc=0, data=True, llabel="Work in Progress", rlabel="")
+
+            plot_1d(histo, ax, histtype="datalike")
+
+            fig.savefig("{}/{}.pdf".format(output_dir, output_name), bbox_inches='tight')
+            fig.savefig("{}/{}.png".format(output_dir, output_name), bbox_inches='tight')
+
 
 
 if __name__ == "__main__":
-    logger = setup_logging()
     args = parse_arguments()
     main(args)

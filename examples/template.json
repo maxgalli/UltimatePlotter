@@ -1,0 +1,27 @@
+{
+    "variables_specs": [
+        {
+            "name": ,
+            "expression": ,
+            "bins": ,
+            "range":
+        }
+    ],
+    "samples": [
+        {
+            "process": "data",
+            "type": "data"
+            "file": ,
+            "tree": ,
+            "color": ,
+        },
+        {
+            "process": ,
+            "type": "simulation"
+            "file": ,
+            "tree": ,
+            "color": ,
+        }
+    ],
+    "selections": []
+}
