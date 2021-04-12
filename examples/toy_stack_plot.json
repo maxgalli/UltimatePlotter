@@ -1,0 +1,41 @@
+{
+    "variables_specs": [
+        {
+            "name": "mass",
+            "expression": "$mass$",
+            "bins": 120,
+            "range": [0, 120]
+        },
+        {
+            "name": "pt",
+            "expression": "$p_t$",
+            "bins": 80,
+            "range": [0, 30]
+        }
+    ],
+    "samples_specs": [
+        {
+            "process": "data",
+            "type": "data",
+            "file": "examples/root_files/data.root",
+            "tree": "Events",
+            "histtype": "datalike"
+        },
+        {
+            "process": "Zee",
+            "type": "simulation",
+            "file": "examples/root_files/mc1.root",
+            "tree": "Events",
+            "histtype": "stepfilled",
+            "color": "deepskyblue"
+        },
+        {
+            "process": "Ztt",
+            "type": "simulation",
+            "file": "examples/root_files/mc2.root",
+            "tree": "Events",
+            "histtype": "stepfilled",
+            "color": "orange"
+        }
+    ]
+}

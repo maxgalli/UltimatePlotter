@@ -1,0 +1,33 @@
+{
+    "variables_specs": [
+        {
+            "name": "mass",
+            "expression": "$mass$",
+            "bins": 120,
+            "range": [60, 120]
+        },
+        {
+            "name": "pt",
+            "expression": "$p_t$",
+            "bins": 100,
+            "range": [0, 100]
+        }
+    ],
+    "samples_specs": [
+        {
+            "process": "data",
+            "type": "data",
+            "file": "/work/gallim/root_files/tnp_merged_outputs/2018/HOPEFULLY/outputData.root",
+            "tree": "tagAndProbeDumper/trees/Data_13TeV_All",
+            "histtype": "datalike"
+        },
+        {
+            "process": "mc",
+            "type": "simulation",
+            "file": "/work/gallim/root_files/tnp_merged_outputs/2018/HOPEFULLY/outputMC.root",
+            "tree": "tagAndProbeDumper/trees/DYJetsToLL_amcatnloFXFX_13TeV_All",
+            "histtype": "stepfilled",
+            "color": "deepskyblue"
+        }
+    ]
+}

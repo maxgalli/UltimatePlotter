@@ -1,10 +1,16 @@
+from .histo import Histo1D
+
 import logging
 logger = logging.getLogger(__name__)
 
 
 
-def plot_1d(histo, axes, histtype="step", color=None):
-    logger.info("Drawing plot for variable {}".format(histo.variable.name))
+def plot_1d(histo, axes, histtype="step", color=None, bottom_histo=None):
+    logger.info("Drawing plot for variable {}, sample {}".format(histo.variable.name, histo.sample.name))
+
+    # Create empty bottom_histogram for stacked plots
+    if not bottom_histo:
+        bottom_histo = Histo1D(variable=histo.variable, sample=histo.sample, binning=histo.nbins, range=histo.range)
 
     histtypes = ["stepfilled", "step", "datalike"]
     if histtype not in histtypes:
@@ -23,7 +29,8 @@ def plot_1d(histo, axes, histtype="step", color=None):
             edge_color = "black"
 
         _edges = [histo.edges[0], *histo.edges]
-        _h = [0, *histo.sum_events, 0]
+        sum_events = histo.sum_events + bottom_histo.sum_events
+        _h = [0, *sum_events, 0]
         axes.step(_edges, _h, color=edge_color, linestyle='-', linewidth=1, where='post', label=step_label)
 
         # Plot histogram as set of bars (if histtype == stepfilled)
@@ -34,14 +41,15 @@ def plot_1d(histo, axes, histtype="step", color=None):
                     width=histo.widths_from_edges(histo.edges),
                     align="edge",
                     label=histo.sample.expression,
-                    color=color
+                    color=color,
+                    bottom=bottom_histo.sum_events
                     )
 
     # Set labels
     if histo.norm:
-        axes.set_ylabel("Density")
+        axes.set_ylabel("Density", loc="center")
     else:
-        axes.set_ylabel("Events")
+        axes.set_ylabel("Events", loc="center")
 
     axes.set_xlabel(histo.variable.expression, loc="center")
     axes.legend(fontsize=16)

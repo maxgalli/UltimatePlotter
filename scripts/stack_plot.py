@@ -56,28 +56,44 @@ def main(args):
     for sample in samples_specs:
         sample["events"] = extract(sample["file"], sample["tree"], variables)
 
-    for vs in variables_specs:
-        for ss in samples_specs:
-            variable_label = Label(vs["name"], vs["expression"])
-            sample_label = Label(ss["process"])
+    # Divide sample specs into data and simulation
+    data_specs = [ss for ss in samples_specs if ss["type"] == "data"]
+    sim_specs = [ss for ss in samples_specs if ss["type"] == "simulation"]
 
-            binning = vs["bins"]
-            rng = vs["range"]
+    for vs in variables_specs:
+        variable_label = Label(vs["name"], vs["expression"])
+        binning = vs["bins"]
+        rng = vs["range"]
+
+        # Setup figure
+        output_name = "_".join([variable_label.name, "{}bins".format(str(binning)), *map(str, rng)])
+
+        fig, ax = plt.subplots()
+
+        prev_histo = Histo1D(variable=variable_label, sample=Label("placeholder"), binning=binning, range=rng)
+        for ss in sim_specs:
+            sample_label = Label(ss["process"])
 
             histo = Histo1D(variable=variable_label, sample=sample_label, binning=binning, range=rng)
             histo.fill(ss["events"][variable_label.name].to_numpy())
 
-            # Setup and dump figure
-            output_name = "_".join([variable_label.name, sample_label.name, "{}bins".format(str(binning)), *map(str, rng)])
+            color = ss["color"] if "color" in ss else None
+            plot_1d(histo, ax, histtype=ss["histtype"], color=color, bottom_histo=prev_histo)
+            prev_histo += histo
 
-            fig, ax = plt.subplots()
-            hep.cms.label(loc=0, data=True, llabel="Work in Progress", rlabel="", ax=ax, pad=.05)
+        for ss in data_specs:
+            sample_label = Label(ss["process"])
+
+            histo = Histo1D(variable=variable_label, sample=sample_label, binning=binning, range=rng)
+            histo.fill(ss["events"][variable_label.name].to_numpy())
 
             color = ss["color"] if "color" in ss else None
-            plot_1d(histo, ax, histtype=ss["histtype"], color=ss["color"])
+            plot_1d(histo, ax, histtype=ss["histtype"], color=color)
 
-            fig.savefig("{}/{}.pdf".format(output_dir, output_name), bbox_inches='tight')
-            fig.savefig("{}/{}.png".format(output_dir, output_name), bbox_inches='tight')
+        hep.cms.label(loc=0, data=True, llabel="Work in Progress", rlabel="", ax=ax, pad=.001)
+
+        fig.savefig("{}/{}.pdf".format(output_dir, output_name), bbox_inches='tight')
+        fig.savefig("{}/{}.png".format(output_dir, output_name), bbox_inches='tight')
 
 
 
