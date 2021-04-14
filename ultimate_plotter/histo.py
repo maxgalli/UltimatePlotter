@@ -91,8 +91,8 @@ class Histo1D:
         return np.asarray(widths)
 
     def fill(self, values, weights=None):
-        if self.edges:
-            sum_events, _ = np.histogram(values, bins=self.edges, weights=weights, density=self.norm)
+        if self.edges is not None:
+            sum_events, _ = np.histogram(values, bins=self.edges, range=self.range, weights=weights, density=self.norm)
         else:
             sum_events, edges = np.histogram(values, bins=self.nbins, range=self.range, weights=weights, density=self.norm)
             self.edges = edges

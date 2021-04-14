@@ -53,5 +53,6 @@ def plot_1d(histo, axes, histtype="step", color=None, bottom_histo=None):
 
     axes.set_xlabel(histo.variable.expression, loc="center")
     axes.legend(fontsize=16)
+    axes.set_ylim(bottom=0.)
 
     return axes

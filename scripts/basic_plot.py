@@ -8,7 +8,7 @@ from ultimate_plotter import Label
 from ultimate_plotter import universal_parser
 
 from ultimate_plotter.utils import setup_logging
-from ultimate_plotter.utils import extract
+from ultimate_plotter.utils import extract_batches
 from ultimate_plotter.plotting_tools import plot_1d
 
 hep.set_style("CMS")
@@ -51,33 +51,57 @@ def main(args):
     if "selections" in config:
         selections = config["selections"]
 
-    # Read ROOT input files as awkward arrays
+    # Create list of names for variables and samples
     variables = [vs["name"] for vs in variables_specs]
-    for sample in samples_specs:
-        sample["events"] = extract(sample["file"], sample["tree"], variables)
+    samples = [ss["process"] for ss in samples_specs]
 
+    """Create histograms
+    histos = {
+        'var1' : {
+            'sample1': Histo1D,
+            'sample2': Histo1D,
+            ...
+        },
+        ...
+    }
+    """
+    histos = {}
     for vs in variables_specs:
+        variable_label = Label(vs["name"], vs["expression"])
+        binning = vs["bins"]
+        rng = vs["range"]
+        histos[variable_label.name] = {}
+
         for ss in samples_specs:
-            variable_label = Label(vs["name"], vs["expression"])
             sample_label = Label(ss["process"])
+            histos[variable_label.name][sample_label.name] = Histo1D(variable=variable_label, sample=sample_label, binning=binning, range=rng)
 
-            binning = vs["bins"]
-            rng = vs["range"]
+    # Read ROOT input files as awkward arrays in batches
+    for sample in samples_specs:
+        generator = extract_batches(sample["files"], sample["tree"], variables)
+        for batch in generator:
+            for var in variables:
+                histos[var][sample["process"]].fill(batch[var].to_numpy())
 
-            histo = Histo1D(variable=variable_label, sample=sample_label, binning=binning, range=rng)
-            histo.fill(ss["events"][variable_label.name].to_numpy())
+    # One plot for each variable, so we loop over the variable specs
+    for vs in variables_specs:
+        var = vs["name"]
+        binning = vs["bins"]
+        rng = vs["range"]
 
-            # Setup and dump figure
-            output_name = "_".join([variable_label.name, sample_label.name, "{}bins".format(str(binning)), *map(str, rng)])
+        # Setup figure
+        output_name = "_".join([var, "{}bins".format(str(binning)), *map(str, rng)])
+        fig, ax = plt.subplots()
 
-            fig, ax = plt.subplots()
-            hep.cms.label(loc=0, data=True, llabel="Work in Progress", rlabel="", ax=ax, pad=.05)
-
+        for ss in samples_specs:
+            histo = histos[var][ss["process"]]
             color = ss["color"] if "color" in ss else None
             plot_1d(histo, ax, histtype=ss["histtype"], color=ss["color"])
 
-            fig.savefig("{}/{}.pdf".format(output_dir, output_name), bbox_inches='tight')
-            fig.savefig("{}/{}.png".format(output_dir, output_name), bbox_inches='tight')
+        hep.cms.label(loc=0, data=True, llabel="Work in Progress", rlabel="", ax=ax, pad=.05)
+
+        fig.savefig("{}/{}.pdf".format(output_dir, output_name), bbox_inches='tight')
+        fig.savefig("{}/{}.png".format(output_dir, output_name), bbox_inches='tight')
 
 
 
