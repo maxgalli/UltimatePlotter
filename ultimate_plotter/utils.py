@@ -34,6 +34,6 @@ def extract_batches(input_files, tree_name, variables=None):
     logger.info("Creating generator using uproot.iterate for input files {}".format(input_files))
 
     inputs = ["{}:{}".format(fl, tree_name) for fl in input_files]
-    generator = uproot.iterate(inputs, expressions=variables)
+    generator = uproot.iterate(inputs, expressions=variables, library="np")
 
     return generator

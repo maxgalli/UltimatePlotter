@@ -1,0 +1,25 @@
+{
+    "variables": [
+        {
+            "name": "mass",
+            "label": "$mass$",
+            "n_or_arr": 100,
+            "lo": 0,
+            "hi": 120
+        }
+    ],
+    "samples": [
+        {
+            "name": "data",
+            "files": ["examples/root_files/data.root"],
+            "tree": "Events",
+            "color": "red"
+        }
+    ],
+
+    "density": true,
+    "category": {
+        "name": "sample",
+        "label": "Sample"
+    }
+}

@@ -11,4 +11,5 @@ dependencies:
   - aghast
   - boost-histogram
   - mplhep
+  - coffea
   - rich

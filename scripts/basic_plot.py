@@ -2,6 +2,7 @@
 import argparse
 import matplotlib.pyplot as plt
 import mplhep as hep
+import coffea.hist as hist
 
 from ultimate_plotter import Histo1D
 from ultimate_plotter import Label
@@ -46,60 +47,64 @@ def main(args):
 
     config = universal_parser(config)
 
-    variables_specs = config["variables_specs"]
-    samples_specs = config["samples_specs"]
+    variables_specs = config["variables"]
+    samples_specs = config["samples"]
     if "selections" in config:
         selections = config["selections"]
 
-    # Create list of names for variables and samples
-    variables = [vs["name"] for vs in variables_specs]
-    samples = [ss["process"] for ss in samples_specs]
+    # Name that goes on Y axis in coffea histograms
+    density = config["density"]
+    if density:
+        y_axis_name = "Density"
+    else:
+        y_axis_name = "Events"
 
-    """Create histograms
-    histos = {
-        'var1' : {
-            'sample1': Histo1D,
-            'sample2': Histo1D,
-            ...
-        },
-        ...
-    }
-    """
+    # Create histograms (one histogram per variable)
     histos = {}
     for vs in variables_specs:
-        variable_label = Label(vs["name"], vs["expression"])
-        binning = vs["bins"]
-        rng = vs["range"]
-        histos[variable_label.name] = {}
-
-        for ss in samples_specs:
-            sample_label = Label(ss["process"])
-            histos[variable_label.name][sample_label.name] = Histo1D(variable=variable_label, sample=sample_label, binning=binning, range=rng)
+        histo = hist.Hist(
+                y_axis_name,
+                hist.Cat(**config["category"]),
+                hist.Bin(**vs)
+                )
+        histos[vs["name"]] = histo
 
     # Read ROOT input files as awkward arrays in batches
-    for sample in samples_specs:
-        generator = extract_batches(sample["files"], sample["tree"], variables)
-        for batch in generator:
-            for var in variables:
-                histos[var][sample["process"]].fill(batch[var].to_numpy())
+    # Fill histograms in the process
+    for var, histo in histos.items():
+        variables = [var]
+        for sample in samples_specs:
+            if "weight" in sample:
+                variables.extend(sample["weight"])
+            generator = extract_batches(sample["files"], sample["tree"], variables)
+            for batch in generator:
+                kwd_arg = {config["category"]["name"]: sample["name"]}
+                histo.fill(**kwd_arg, **batch)
 
     # One plot for each variable, so we loop over the variable specs
-    for vs in variables_specs:
-        var = vs["name"]
-        binning = vs["bins"]
-        rng = vs["range"]
+    for var, histo in histos.items():
+        logger.info("Drawing histogram for variable {}".format(var))
 
         # Setup figure
-        output_name = "_".join([var, "{}bins".format(str(binning)), *map(str, rng)])
+        bin_from_histo = histo.axis(var)
+        output_name = "_".join([var, "{}bins".format(len(bin_from_histo.edges())), str(bin_from_histo._lo), str(bin_from_histo._hi)])
+
         fig, ax = plt.subplots()
 
-        for ss in samples_specs:
-            histo = histos[var][ss["process"]]
-            color = ss["color"] if "color" in ss else None
-            plot_1d(histo, ax, histtype=ss["histtype"], color=ss["color"])
+        # Colors
+        try:
+            ax.set_prop_cycle(color=[ss["color"] for ss in samples_specs])
+        except KeyError:
+            continue
+
+        hist.plot1d(
+                hist=histo,
+                ax=ax,
+                clear=False,
+                density=density
+                )
 
         hep.cms.label(loc=0, data=True, llabel="Work in Progress", rlabel="", ax=ax, pad=.05)
-
         fig.savefig("{}/{}.pdf".format(output_dir, output_name), bbox_inches='tight')
         fig.savefig("{}/{}.png".format(output_dir, output_name), bbox_inches='tight')
 

@@ -1,0 +1,38 @@
+{
+    "variables": [
+        {
+            "name": "mass",
+            "label": "$mass$",
+            "n_or_arr": 60,
+            "lo": 0,
+            "hi": 120
+        },
+        {
+            "name": "pt",
+            "label": "$p_t$",
+            "n_or_arr": 30,
+            "lo": 0,
+            "hi": 20
+        }
+    ],
+    "samples": [
+        {
+            "name": "mc1",
+            "files": ["examples/root_files/mc1.root"],
+            "tree": "Events",
+            "color": "green"
+        },
+        {
+            "name": "mc2",
+            "files": ["examples/root_files/mc2.root"],
+            "tree": "Events",
+            "color": "deepskyblue"
+        }
+    ],
+
+    "density": true,
+    "category": {
+        "name": "sample",
+        "label": "Sample"
+    }
+}
